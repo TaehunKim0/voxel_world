@@ -1,4 +1,3 @@
-use bevy::ecs::query;
 #[warn(unused_imports)]
 use bevy::prelude::*;
 
@@ -11,12 +10,19 @@ struct Name(String);
 #[derive(Component)]
 struct Nothing;
 
+pub struct HelloPlugin;
+
+impl Plugin for HelloPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, add_people)
+            .add_systems(Update, (hello_world, (update_people, greet_people).chain()));
+    }
+}
 
 fn main() {
     App::new()
-        .add_systems(Startup, add_people)
-        .add_systems(Update, (hello_world, (update_people, greet_people).chain()))
-        .run()
+        .add_plugins((DefaultPlugins, HelloPlugin))
+        .run();
 }
 
 fn add_people(mut commands: Commands) {
