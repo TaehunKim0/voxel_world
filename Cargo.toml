@@ -3,10 +3,10 @@ name = "pcg_engine"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 bevy = "0.13.1"
+bevy_flycam = "*"
+image = "0.25.1"
 
 [workspace]
 resolver = "2"
