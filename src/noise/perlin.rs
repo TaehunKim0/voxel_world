@@ -69,6 +69,6 @@ pub fn perlin_noise2d(x: f32, y: f32, num_octaves: i32) -> f32 {
         frequency *= 2.0;
     }
 
-    result = result.max(-1.0).min(1.0);
+    result = result.clamp(-1., 1.);
     result
 }
