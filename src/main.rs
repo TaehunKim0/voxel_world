@@ -9,7 +9,7 @@ use bevy::{
 
 use rand::prelude::*;
 use bevy_flycam::prelude::*;
-use noise::perlin;
+use noise::*;
 
 struct WindowSize {
     x: i32,
@@ -38,6 +38,7 @@ fn main() {
                     maximize: false,
                     ..Default::default()
                 },
+                mode: bevy::window::WindowMode::BorderlessFullscreen,
                 visible: true,
                 ..default()
             }),
@@ -45,7 +46,7 @@ fn main() {
         }))
         .add_plugins(PlayerPlugin)
         .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        //.add_plugins(FrameTimeDiagnosticsPlugin::default())
         .add_systems(Startup, setup)
         .run();
 }
@@ -62,16 +63,15 @@ fn setup(
 
     for y in 0..100 {
         for x in 0..100 {
-
-            let noise = perlin::perlin_noise2d(x as f32, y as f32, 12);
-            println!("{}", noise);
+            let noise = random_perlin::perlin_noise2d(x as f32, y as f32, 12);
+            //println!("noise : {}", noise);
             let range = (noise * 100.) as i32;
+            //println!("range : {}", range);
             let color = match range {
                 n if n < 0 => Color::rgb(0.,0.,1.),
-                0 => Color::rgb(0.,1.,0.),
-                0..=1 => Color::rgb(88. / 255.,57. / 255., 39. / 255.),
-                1..=3 => Color::rgb(66. / 255.,65. / 255., 66. / 255.),
-                _ => Color::rgb(66. / 255., 65. / 255. , 66. / 255.)
+                0..=1 => Color::rgb(66. / 255.,65. / 255., 66. / 255.),
+                1..=2 => Color::rgb(88. / 255.,57. / 255., 39. / 255.),
+                _ => Color::rgb(126. / 255.,200. / 255., 80. / 255.),
             };
 
             commands.spawn(PbrBundle {
