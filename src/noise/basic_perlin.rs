@@ -1,5 +1,6 @@
 use rand::prelude::*;
 use lazy_static::lazy_static;
+use Rng;
 
 #[derive(Copy, Clone, Debug)]
 struct Vector2 {

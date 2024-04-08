@@ -1,16 +1,16 @@
 mod noise;
-use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
-use bevy::diagnostic::LogDiagnosticsPlugin;
+mod voxel;
+
 use bevy::{
-    pbr::*,
     prelude::*,
     window::{PresentMode, WindowTheme},
+    diagnostic::LogDiagnosticsPlugin,
+    diagnostic::FrameTimeDiagnosticsPlugin
 };
-
-use rand::prelude::*;
 use bevy_flycam::prelude::*;
-use noise::*;
+use voxel::world;
 
+#[derive(Resource)]
 struct WindowSize {
     x: i32,
     y: i32,
@@ -46,65 +46,8 @@ fn main() {
         }))
         .add_plugins(PlayerPlugin)
         .add_plugins(LogDiagnosticsPlugin::default())
-        //.add_plugins(FrameTimeDiagnosticsPlugin::default())
-        .add_systems(Startup, setup)
+        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+        .insert_resource(window_size)
+        .add_systems(Startup, world::setup)
         .run();
-}
-
-#[derive(Component)]
-struct Shape;
-
-fn setup(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let window_size = WindowSize::default();
-
-    for y in 0..100 {
-        for x in 0..100 {
-            let noise = random_perlin::perlin_noise2d(x as f32, y as f32, 12);
-            //println!("noise : {}", noise);
-            let range = (noise * 100.) as i32;
-            //println!("range : {}", range);
-            let color = match range {
-                n if n < 0 => Color::rgb(0.,0.,1.),
-                0..=1 => Color::rgb(66. / 255.,65. / 255., 66. / 255.),
-                1..=2 => Color::rgb(88. / 255.,57. / 255., 39. / 255.),
-                _ => Color::rgb(126. / 255.,200. / 255., 80. / 255.),
-            };
-
-            commands.spawn(PbrBundle {
-                mesh: meshes.add(Cuboid::default().mesh()),
-                material: materials.add(color),
-                transform: Transform::from_xyz(
-                    x as f32 * Cuboid::default().size().x,
-                    (noise * 100.) as i32 as f32 * Cuboid::default().size().y,
-                    y as f32 * Cuboid::default().size().z,
-                ),
-                ..default()
-            });
-        }
-    }
-
-    // directional light
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: light_consts::lux::OVERCAST_DAY,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(4.),
-            ..default()
-        },
-        cascade_shadow_config: CascadeShadowConfigBuilder {
-            first_cascade_far_bound: 10.0,
-            maximum_distance: 100.0,
-            ..default()
-        }
-        .into(),
-        ..default()
-    });
 }
