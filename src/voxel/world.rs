@@ -1,38 +1,87 @@
-use bevy::prelude::*;
-use bevy::pbr::CascadeShadowConfigBuilder;
+use super::block::*;
+use crate::noise::{self, random_perlin::*, basic_perlin::*};
 use crate::{noise::*, WindowSize};
+use bevy::pbr::CascadeShadowConfigBuilder;
+use bevy::prelude::*;
+use other_noise::NoiseFn;
+
+extern crate noise as other_noise;
 
 pub fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    _window_size: Res<WindowSize>
+    _window_size: Res<WindowSize>,
 ) {
-    for y in 0..100 {
-        for x in 0..100 {
-            let noise = random_perlin::perlin_noise2d(x as f32, y as f32, 12);
+    const PLANET_RADIUS: i32 = 40;
+    let simplex_noise = other_noise::Simplex::new(other_noise::Simplex::DEFAULT_SEED);
+    let zoom: f64 = 10.0;
 
-            let range = (noise * 100.) as i32;
+    for x in (0)..PLANET_RADIUS {
+        for y in (0)..PLANET_RADIUS {
+            for z in (0)..PLANET_RADIUS {
+                let w = simplex_noise.get([x as f64 / zoom, y as f64 / zoom, z as f64 / zoom]);
+                //let w = noise::basic_perlin::perlin_noise3d(x as f32, y as f32, z as f32, 8);
+                let inside_planet = ((x * x + y * y + z * z) as f64).sqrt() <= PLANET_RADIUS as f64;
 
-            let color = match range {
-                n if n < 0 => Color::rgb(0., 0., 1.),
-                0..=1 => Color::rgb(66. / 255., 65. / 255., 66. / 255.),
-                1..=2 => Color::rgb(88. / 255., 57. / 255., 39. / 255.),
-                _ => Color::rgb(126. / 255., 200. / 255., 80. / 255.),
-            };
+                if inside_planet && w > 0.0 {
+                    let distance_from_center =
+                        ((x * x + y * y + z * z) as f64).sqrt() / PLANET_RADIUS as f64;
 
-            commands.spawn(PbrBundle {
-                mesh: meshes.add(Cuboid::default().mesh()),
-                material: materials.add(color),
-                transform: Transform::from_xyz(
-                    x as f32 * Cuboid::default().size().x,
-                    (range as f32) * Cuboid::default().size().y,
-                    y as f32 * Cuboid::default().size().z,
-                ),
-                ..default()
-            });
+                    let material = match distance_from_center {
+                        d if d < 0.5 => StandardMaterial {
+                            base_color: Color::rgb(0.8, 0.2, 0.1), // Lava texture
+                            ..default()
+                        },
+                        d if d > 0.95 => StandardMaterial {
+                            base_color: Color::rgb(0.3, 0.7, 0.2), // Land texture (Grass)
+                            ..default()
+                        },
+                        d if d > 0.9 => StandardMaterial {
+                            base_color: Color::rgb(0.6, 0.4, 0.2), // Dirt texture
+                            ..default()
+                        },
+                        _ => StandardMaterial {
+                            base_color: Color::rgb(0.1, 0.3, 0.8), // Ocean texture
+                            ..default()
+                        },
+                    };
+
+                    let material = materials.add(material);
+                    commands.spawn(PbrBundle {
+                        mesh: meshes.add(Cuboid::default().mesh()),
+                        material,
+                        transform: Transform::from_xyz(
+                            x as f32 * Cuboid::default().size().x,
+                            y as f32 * Cuboid::default().size().y,
+                            z as f32 * Cuboid::default().size().z,
+                        ),
+                        ..default()
+                    });
+                }
+            }
         }
-    }
+    } // for x in 0..MAP_SIZE {
+      //     for y in 0..MAP_SIZE {
+      //         for z in 0..MAP_SIZE {
+      //             if ((x * x + y * y + z * z) as f64).sqrt() <= MAP_SIZE as f64 {
+      //                 commands.spawn(PbrBundle {
+      //                     mesh: meshes.add(Cuboid::default().mesh()),
+      //                     material: materials.add(StandardMaterial {
+      //                         base_color: Color::rgb(0.8, 0.7, 0.6),
+      //                         ..default()
+      //                     }),
+      //                     transform: Transform::from_xyz(
+      //                         x as f32 * Cuboid::default().size().x,
+      //                         y as f32 * Cuboid::default().size().y,
+      //                         z as f32 * Cuboid::default().size().z,
+      //                     ),
+      //                     ..default()
+      //                 });
+      //             }
+      //         }
+      //     }
+      // }
 
     // directional light
     commands.spawn(DirectionalLightBundle {

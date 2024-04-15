@@ -18,7 +18,7 @@ struct WindowSize {
 
 impl Default for WindowSize {
     fn default() -> WindowSize {
-        WindowSize { x: 1920, y: 1080 }
+        WindowSize { x: 800, y: 600 }
     }
 }
 
@@ -38,15 +38,15 @@ fn main() {
                     maximize: false,
                     ..Default::default()
                 },
-                mode: bevy::window::WindowMode::BorderlessFullscreen,
+                mode: bevy::window::WindowMode::Windowed,
                 visible: true,
                 ..default()
             }),
             ..default()
         }))
         .add_plugins(PlayerPlugin)
-        .add_plugins(LogDiagnosticsPlugin::default())
-        .add_plugins(FrameTimeDiagnosticsPlugin::default())
+//       .add_plugins(LogDiagnosticsPlugin::default())
+//        .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .insert_resource(window_size)
         .add_systems(Startup, world::setup)
         .run();

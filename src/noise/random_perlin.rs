@@ -1,5 +1,5 @@
-use std::f32::consts::PI;
 use std::f32;
+use std::f32::consts::PI;
 
 #[derive(Copy, Clone, Debug)]
 pub struct Vector2 {
@@ -12,19 +12,21 @@ pub fn interpolate(a0: f32, a1: f32, w: f32) -> f32 {
 }
 
 pub fn random_gradient(ix: u32, iy: u32) -> Vector2 {
-
-    let w : u32 = 8 * 4;
-    let s : u32 = w / 2;
+    let w: u32 = 8 * 4;
+    let s: u32 = w / 2;
     let mut a = ix;
     let mut b = iy;
     a = a.wrapping_mul(3284157443);
-    b ^= a << s | a >> w-s;
-    b = b.wrapping_mul(1911520717); 
-    a ^= b << s | b >> w-s;
+    b ^= a << s | a >> w - s;
+    b = b.wrapping_mul(1911520717);
+    a ^= b << s | b >> w - s;
     a = a.wrapping_mul(2048419325);
 
     let random = a as f32 * (PI / 2147483648.0); // in [0, 2*Pi]
-    Vector2{x : random.cos(), y : random.sin()}
+    Vector2 {
+        x: random.cos(),
+        y: random.sin(),
+    }
 }
 
 pub fn dot_grid_gradient(ix: i32, iy: i32, x: f32, y: f32) -> f32 {
@@ -58,9 +60,9 @@ pub fn perlin(x: f32, y: f32) -> f32 {
 
 pub fn perlin_noise2d(x: f32, y: f32, num_octaves: i32) -> f32 {
     let mut result = 0.0;
-    let mut amplitude = 0.1;
+    let mut amplitude = 1.0;
     let mut frequency = 0.05;
-    let persistence = 0.5; // Persistence value adjustment
+    let persistence = 1.0; // Persistence value adjustment
 
     for _ in 0..num_octaves {
         let n = amplitude * perlin(x * frequency, y * frequency);
@@ -71,4 +73,12 @@ pub fn perlin_noise2d(x: f32, y: f32, num_octaves: i32) -> f32 {
 
     result = result.clamp(-1., 1.);
     result
+}
+
+pub fn perlin_noise3d(x: f32, y: f32, z: f32, num_octaves: i32) -> f32 {
+    let noise_xy = perlin_noise2d(x, y, num_octaves);
+    let noise_yz = perlin_noise2d(y, z, num_octaves);
+    let noise_zx = perlin_noise2d(z, x, num_octaves);
+
+    noise_xy * noise_yz * noise_zx
 }
