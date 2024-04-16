@@ -1,19 +1,13 @@
 use bevy::prelude::*;
-use bevy::render::mesh::*;
-use bevy::render::render_asset::RenderAssetUsages;
 
-pub struct MeshData {
-    pub mesh: Mesh,
-    pub vertices: Vec<Vec3>,
-    pub triangles: Vec<u32>,
-    pub uvs: Vec<Vec2>,
-    pub initialized: bool,
-}
 
 pub struct VoxelData {}
 impl VoxelData {
-    pub const CHUNK_HEIGHT: i32 = 3;
-    pub const CHUNK_WIDTH: i32 = 3;
+    pub const CHUNK_HEIGHT: i32 = 10;
+    pub const CHUNK_WIDTH: i32 = 10;
+
+    pub const TEXTURE_ATLAS_SIZE: i32 = 4;
+    pub const NORMALIZE_BLOCK_TEXTURE_SIZE: f32 = 1.0 / 4 as f32;
 
     // 큐브의 8개 버텍스의 상대 위치
     pub const VOXEL_VERTS: [Vec3; 8] = [
