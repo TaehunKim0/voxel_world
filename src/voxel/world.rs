@@ -8,7 +8,7 @@ use bevy::render::{
 extern crate noise as other_noise;
 use super::chunk::*;
 use rand::Rng;
-
+use std::f32::consts::PI;
 pub struct World {}
 
 impl World {
@@ -61,11 +61,11 @@ pub fn setup(
 
     let texture_handle: Handle<Image> = asset_server.load("Blocks.png");
 
-    const NUM_CHUNKS: i32 = 1;
+    const NUM_CHUNKS: i32 = 4;
 
     for y in 0..NUM_CHUNKS {
         for x in 0..NUM_CHUNKS {
-            let chunk_coord = ChunkCoord { x, y };
+            let chunk_coord = ChunkCoord {x, y};
 
             let chunk = Chunk::new(chunk_coord);
             println!("chunk len : {}", chunk.vertices.len());
@@ -98,7 +98,16 @@ pub fn setup(
             ));
         }
     }
-
+    // ambient light
+    commands.insert_resource(AmbientLight {
+        color: Color::Rgba {
+            red: 1.0,
+            green: 1.0,
+            blue: 1.0,
+            alpha: 1.0,
+        },
+        brightness: 200.0,
+    });
     // directional light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -108,7 +117,7 @@ pub fn setup(
             ..default()
         },
         transform: Transform {
-            translation: Vec3::new(0.0, 2.0, 0.0),
+            translation: Vec3::new(20.0, 100.0, 0.0),
             rotation: Quat::from_rotation_x(10.0),
             ..default()
         },

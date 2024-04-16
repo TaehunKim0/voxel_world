@@ -1,11 +1,8 @@
 use std::vec;
 
-use bevy::prelude::*;
-
 pub struct BlockType {
     pub block_name: String,
     pub is_solid: bool,
-
     pub back_face_texture: i32,
     pub front_face_texture: i32,
     pub top_face_texture: i32,
