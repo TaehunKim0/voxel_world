@@ -7,10 +7,3 @@ pub enum BlockType {
     Dirt,
     Stone
 }
-
-#[derive(Component)]
-pub struct Block {
-    block_type: BlockType,
-}
-
-

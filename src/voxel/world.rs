@@ -1,11 +1,15 @@
 use super::block::*;
-use crate::noise::{self, random_perlin::*, basic_perlin::*};
+use super::mesh::*;
+use crate::noise::{self, basic_perlin::*, random_perlin::*};
 use crate::{noise::*, WindowSize};
-use bevy::pbr::CascadeShadowConfigBuilder;
+use bevy::pbr::{CascadeShadowConfigBuilder};
 use bevy::prelude::*;
-use other_noise::NoiseFn;
-
+use bevy::render::{
+    mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology,
+};
 extern crate noise as other_noise;
+use super::chunk::*;
+use rand::Rng;
 
 pub fn setup(
     mut commands: Commands,
@@ -13,75 +17,40 @@ pub fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     _window_size: Res<WindowSize>,
 ) {
-    const PLANET_RADIUS: i32 = 40;
-    let simplex_noise = other_noise::Simplex::new(other_noise::Simplex::DEFAULT_SEED);
-    let zoom: f64 = 10.0;
+    let mut rng = rand::thread_rng();
 
-    for x in (0)..PLANET_RADIUS {
-        for y in (0)..PLANET_RADIUS {
-            for z in (0)..PLANET_RADIUS {
-                let w = simplex_noise.get([x as f64 / zoom, y as f64 / zoom, z as f64 / zoom]);
-                //let w = noise::basic_perlin::perlin_noise3d(x as f32, y as f32, z as f32, 8);
-                let inside_planet = ((x * x + y * y + z * z) as f64).sqrt() <= PLANET_RADIUS as f64;
+    const NUM_CHUNKS: i32 = 5; // 청크 개수를 조절할 수 있는 상수
 
-                if inside_planet && w > 0.0 {
-                    let distance_from_center =
-                        ((x * x + y * y + z * z) as f64).sqrt() / PLANET_RADIUS as f64;
+    let chunk = Chunk::new(0.0,0.0,0.0);
 
-                    let material = match distance_from_center {
-                        d if d < 0.5 => StandardMaterial {
-                            base_color: Color::rgb(0.8, 0.2, 0.1), // Lava texture
-                            ..default()
-                        },
-                        d if d > 0.95 => StandardMaterial {
-                            base_color: Color::rgb(0.3, 0.7, 0.2), // Land texture (Grass)
-                            ..default()
-                        },
-                        d if d > 0.9 => StandardMaterial {
-                            base_color: Color::rgb(0.6, 0.4, 0.2), // Dirt texture
-                            ..default()
-                        },
-                        _ => StandardMaterial {
-                            base_color: Color::rgb(0.1, 0.3, 0.8), // Ocean texture
-                            ..default()
-                        },
-                    };
+    let temp_mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, chunk.vertices)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, chunk.uvs)
+    .with_inserted_indices(Indices::U32(chunk.triangles));
 
-                    let material = materials.add(material);
-                    commands.spawn(PbrBundle {
-                        mesh: meshes.add(Cuboid::default().mesh()),
-                        material,
-                        transform: Transform::from_xyz(
-                            x as f32 * Cuboid::default().size().x,
-                            y as f32 * Cuboid::default().size().y,
-                            z as f32 * Cuboid::default().size().z,
-                        ),
-                        ..default()
-                    });
-                }
-            }
-        }
-    } // for x in 0..MAP_SIZE {
-      //     for y in 0..MAP_SIZE {
-      //         for z in 0..MAP_SIZE {
-      //             if ((x * x + y * y + z * z) as f64).sqrt() <= MAP_SIZE as f64 {
-      //                 commands.spawn(PbrBundle {
-      //                     mesh: meshes.add(Cuboid::default().mesh()),
-      //                     material: materials.add(StandardMaterial {
-      //                         base_color: Color::rgb(0.8, 0.7, 0.6),
-      //                         ..default()
-      //                     }),
-      //                     transform: Transform::from_xyz(
-      //                         x as f32 * Cuboid::default().size().x,
-      //                         y as f32 * Cuboid::default().size().y,
-      //                         z as f32 * Cuboid::default().size().z,
-      //                     ),
-      //                     ..default()
-      //                 });
-      //             }
-      //         }
-      //     }
-      // }
+
+    let cube_mesh_handle = meshes.add(temp_mesh.clone());
+
+    let random_color = Color::rgb(
+        rng.gen_range(0.0..1.0),
+        rng.gen_range(0.0..1.0),
+        rng.gen_range(0.0..1.0),
+    );
+
+    commands.spawn((
+        PbrBundle {
+            mesh: cube_mesh_handle,
+            material: materials.add(StandardMaterial {
+                base_color: random_color,
+                ..default()
+            }),
+            ..default()
+        },
+        // 다른 필요한 컴포넌트들 추가 가
+    ));
 
     // directional light
     commands.spawn(DirectionalLightBundle {
