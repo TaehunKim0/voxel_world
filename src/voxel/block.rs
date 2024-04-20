@@ -20,7 +20,7 @@ impl BlockType {
             3 => self.bottom_face_texture,
             4 => self.left_face_texture,
             5 => self.right_face_texture,
-            _ => self.back_face_texture
+            _ => self.back_face_texture,
         }
     }
 
@@ -28,11 +28,11 @@ impl BlockType {
         BlockType {
             block_name: "Grass".to_string(),
             is_solid: true,
-            back_face_texture: 14, 
-            front_face_texture: 14, 
-            top_face_texture: 11, 
-            bottom_face_texture: 13, 
-            right_face_texture: 14, 
+            back_face_texture: 14,
+            front_face_texture: 14,
+            top_face_texture: 11,
+            bottom_face_texture: 13,
+            right_face_texture: 14,
             left_face_texture: 14,
         }
     }
@@ -41,24 +41,37 @@ impl BlockType {
         BlockType {
             block_name: "Stone".to_string(),
             is_solid: true,
-            back_face_texture: 12, 
-            front_face_texture: 12, 
-            top_face_texture: 12, 
-            bottom_face_texture: 12, 
-            right_face_texture: 12, 
+            back_face_texture: 12,
+            front_face_texture: 12,
+            top_face_texture: 12,
+            bottom_face_texture: 12,
+            right_face_texture: 12,
             left_face_texture: 12,
         }
     }
-pub fn new_bed_rock() -> BlockType {
+    pub fn new_bed_rock() -> BlockType {
         BlockType {
             block_name: "BedRock".to_string(),
             is_solid: true,
-            back_face_texture: 5, 
-            front_face_texture: 5, 
-            top_face_texture: 5, 
-            bottom_face_texture: 5, 
-            right_face_texture: 5, 
+            back_face_texture: 5,
+            front_face_texture: 5,
+            top_face_texture: 5,
+            bottom_face_texture: 5,
+            right_face_texture: 5,
             left_face_texture: 5,
+        }
+    }
+
+    pub fn new_sand() -> BlockType {
+        BlockType {
+            block_name: "BedRock".to_string(),
+            is_solid: true,
+            back_face_texture: 6,
+            front_face_texture: 6,
+            top_face_texture: 6,
+            bottom_face_texture: 6,
+            right_face_texture: 6,
+            left_face_texture: 6,
         }
     }
 }
@@ -69,7 +82,12 @@ pub struct Block {
 
 impl Block {
     pub fn new() -> Block {
-        let block_types = vec![BlockType::new_grass(), BlockType::new_stone(), BlockType::new_bed_rock()];
+        let block_types = vec![
+            BlockType::new_grass(),
+            BlockType::new_stone(),
+            BlockType::new_bed_rock(),
+            BlockType::new_sand(),
+        ];
 
         Block { block_types }
     }

@@ -32,28 +32,21 @@ impl Default for WindowSize {
 
 fn main() {
     let window_size = WindowSize::default();
+    let voxel_world = voxel::world::World::new(10);
 
     App::new()
         .add_plugins((
             DefaultPlugins.set(RenderPlugin {
                 render_creation: RenderCreation::Automatic(WgpuSettings {
-                    // WARN this is a native only feature. It will not work with webgl or webgpu
                     features: WgpuFeatures::POLYGON_MODE_LINE,
                     ..default()
                 }),
                 ..default()
             }),
-            // You need to add this plugin to enable wireframe rendering
             //WireframePlugin,
         ))
-        // Wireframes can be configured with this resource. This can be changed at runtime.
         .insert_resource(WireframeConfig {
-            // The global wireframe config enables drawing of wireframes on every mesh,
-            // except those with `NoWireframe`. Meshes with `Wireframe` will always have a wireframe,
-            // regardless of the global configuration.
             global: true,
-            // Controls the default color of all wireframes. Used as the default color for global wireframes.
-            // Can be changed per mesh using the `WireframeColor` component.
             default_color: Color::Rgba {
                 red: 1.0,
                 green: 1.0,
@@ -83,6 +76,7 @@ fn main() {
         // .add_plugins(LogDiagnosticsPlugin::default())
         // .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .insert_resource(window_size)
+        .insert_resource(voxel_world)
         .add_systems(Startup, world::setup)
         .run();
 }

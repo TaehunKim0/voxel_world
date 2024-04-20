@@ -1,7 +1,12 @@
 use super::block::*;
 use super::mesh::*;
 use bevy::prelude::*;
+use noise::NoiseFn;
+use noise::Perlin;
 
+use crate::noise::basic_perlin;
+use crate::noise::basic_perlin::*;
+extern crate noise as other_noise;
 pub struct Chunk {
     pub vertices: Vec<Vec3>,
     pub triangles: Vec<u32>,
@@ -64,15 +69,19 @@ impl Chunk {
 
         y = 1.0 - y - VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE;
 
-        self.uvs
-            .push(Vec2::new(x + offset, y + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset)); // 좌상단 (LT)
+        self.uvs.push(Vec2::new(
+            x + offset,
+            y + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset,
+        )); // 좌상단 (LT)
         self.uvs.push(Vec2::new(x + offset, y + offset)); // 좌하단 (LB)
         self.uvs.push(Vec2::new(
             x + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset,
             y + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset,
         )); // 우상단 (RT)
-        self.uvs
-            .push(Vec2::new(x + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset, y + offset)); // 우하단 (RB)
+        self.uvs.push(Vec2::new(
+            x + VoxelData::NORMALIZE_BLOCK_TEXTURE_SIZE - offset,
+            y + offset,
+        )); // 우하단 (RB)
     }
 
     fn add_voxel_data(&mut self, pos: Vec3) {
@@ -88,19 +97,27 @@ impl Chunk {
                 let block_id =
                     self.voxel_map[pos.x as usize][pos.y as usize][pos.z as usize] as usize;
 
-                let offset = Vec3::new(self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32, 0.0, self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32);
+                let offset = Vec3::new(
+                    self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32,
+                    0.0,
+                    self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32,
+                );
 
                 self.vertices.push(
-                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][0] as usize] + offset,
+                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][0] as usize]
+                        + offset,
                 );
                 self.vertices.push(
-                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][1] as usize] + offset,
+                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][1] as usize]
+                        + offset,
                 );
                 self.vertices.push(
-                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][2] as usize] + offset,
+                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][2] as usize]
+                        + offset,
                 );
                 self.vertices.push(
-                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][3] as usize] + offset,
+                    pos + VoxelData::VOXEL_VERTS[VoxelData::VOXEL_TRIS[p as usize][3] as usize]
+                        + offset,
                 );
 
                 let mut block = Block::new();
@@ -129,10 +146,14 @@ impl Chunk {
             return false;
         }
         let block = Block::new();
-        return block.block_types[self.voxel_map[x as usize][y as usize][z as usize] as usize].is_solid;
+        return block.block_types[self.voxel_map[x as usize][y as usize][z as usize] as usize]
+            .is_solid;
     }
 
     fn populate_voxel_map(&mut self) {
+        let perlin = Perlin::new(1932);
+        let simplex_noise = other_noise::Simplex::new(other_noise::Simplex::DEFAULT_SEED);
+        let zoom = 10.0;
         for x in 0..VoxelData::CHUNK_HEIGHT {
             for y in 0..VoxelData::CHUNK_WIDTH {
                 for z in 0..VoxelData::CHUNK_WIDTH {
@@ -142,6 +163,9 @@ impl Chunk {
                     if y < 1 {
                         self.voxel_map[x as usize][y as usize][z as usize] = 2;
                     } else if y == VoxelData::CHUNK_HEIGHT - 1 {
+                        //let w = perlin.get([x as f64 * 0.1, y as f64 * 0.1, z as f64 * 0.1]);
+                        // /* let w = simplex_noise.get([x as f64 / zoom, y as f64 / zoom, z as f64 / zoom]); */
+                        // let w = basic_perlin::perlin_noise2d(x as f32, y as f32, 4);
                         self.voxel_map[x as usize][y as usize][z as usize] = 0;
                     } else {
                         self.voxel_map[x as usize][y as usize][z as usize] = 1;

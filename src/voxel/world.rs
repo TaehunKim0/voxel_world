@@ -9,16 +9,32 @@ extern crate noise as other_noise;
 use super::chunk::*;
 use rand::Rng;
 use std::f32::consts::PI;
-pub struct World {}
+
+#[derive(Resource)]
+pub struct World {
+    world_size: i32,
+    chunks: Vec<Vec<Chunk>>,
+}
 
 impl World {
-    pub const WORLD_SIZE: i32 = 5;
+    pub fn new(world_size: i32) -> Self {
+        let mut chunks = Vec::with_capacity(world_size as usize);
+        for y in 0..world_size {
+            let mut row = Vec::with_capacity(world_size as usize);
+            for x in 0..world_size {
+                row.push(Chunk::new(ChunkCoord { x, y }));
+            }
+            chunks.push(row);
+        }
+
+        World { world_size, chunks }
+    }
 
     pub fn is_chunk_in_world(&mut self, coord: ChunkCoord) -> bool {
         if coord.x > 0
-            && coord.x < Self::WORLD_SIZE * VoxelData::CHUNK_WIDTH - 1
+            && coord.x < self.world_size * VoxelData::CHUNK_WIDTH - 1
             && coord.y > 0
-            && coord.y < Self::WORLD_SIZE * VoxelData::CHUNK_WIDTH - 1
+            && coord.y < self.world_size * VoxelData::CHUNK_WIDTH - 1
         {
             return true;
         }
@@ -27,11 +43,11 @@ impl World {
 
     pub fn is_voxel_in_world(&mut self, pos: Vec3) -> bool {
         if pos.x > 0.0
-            && pos.x < (Self::WORLD_SIZE * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.x < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
             && pos.y > 0.0
-            && pos.y < (Self::WORLD_SIZE * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.y < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
             && pos.z > 0.0
-            && pos.z < (Self::WORLD_SIZE * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.z < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
         {
             return true;
         }
@@ -51,51 +67,42 @@ impl World {
 }
 
 pub fn setup(
+    mut voxel_world: Res<World>,
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     _window_size: Res<WindowSize>,
 ) {
-    let mut rng = rand::thread_rng();
-
     let texture_handle: Handle<Image> = asset_server.load("Blocks.png");
+    let num_chunk = voxel_world.world_size;
 
-    const NUM_CHUNKS: i32 = 4;
+    for y in 0..num_chunk {
+        for x in 0..num_chunk {
+            if let Some(row) = voxel_world.chunks.get(y as usize) {
+                if let Some(chunk) = row.get(x as usize) {
+                    let temp_mesh = Mesh::new(
+                        PrimitiveTopology::TriangleList,
+                        RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
+                    )
+                    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, chunk.vertices.clone())
+                    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, chunk.uvs.clone())
+                    .with_inserted_indices(Indices::U32(chunk.triangles.clone()));
 
-    for y in 0..NUM_CHUNKS {
-        for x in 0..NUM_CHUNKS {
-            let chunk_coord = ChunkCoord {x, y};
-
-            let chunk = Chunk::new(chunk_coord);
-            println!("chunk len : {}", chunk.vertices.len());
-
-            let temp_mesh = Mesh::new(
-                PrimitiveTopology::TriangleList,
-                RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD,
-            )
-            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, chunk.vertices)
-            .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, chunk.uvs)
-            .with_inserted_indices(Indices::U32(chunk.triangles));
-
-            let cube_mesh_handle = meshes.add(temp_mesh.clone());
-            let _random_color = Color::rgb(
-                rng.gen_range(0.0..1.0),
-                rng.gen_range(0.0..1.0),
-                rng.gen_range(0.0..1.0),
-            );
-
-            commands.spawn((
-                PbrBundle {
-                    mesh: cube_mesh_handle,
-                    material: materials.add(StandardMaterial {
-                        base_color_texture: Some(texture_handle.clone()),
-                        ..default()
-                    }),
-                    ..default()
-                },
-                // 다른 필요한 컴포넌트들 추가
-            ));
+                    let cube_mesh_handle = meshes.add(temp_mesh.clone());
+                    commands.spawn((
+                        PbrBundle {
+                            mesh: cube_mesh_handle,
+                            material: materials.add(StandardMaterial {
+                                base_color_texture: Some(texture_handle.clone()),
+                                ..default()
+                            }),
+                            ..default()
+                        },
+                        // 다른 필요한 컴포넌트들 추가
+                    ));
+                }
+            }
         }
     }
     // ambient light
