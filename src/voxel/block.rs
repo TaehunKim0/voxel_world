@@ -76,6 +76,13 @@ impl BlockType {
     }
 }
 
+pub enum EBlockType {
+    Grass = 0,
+    Stone,
+    BedRock,
+    Sand
+}
+
 pub struct Block {
     pub block_types: Vec<BlockType>,
 }

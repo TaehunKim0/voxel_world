@@ -32,7 +32,8 @@ impl Default for WindowSize {
 
 fn main() {
     let window_size = WindowSize::default();
-    let voxel_world = voxel::world::World::new(10);
+    let mut voxel_world = voxel::world::World::new();
+    voxel_world.generate_world();
 
     App::new()
         .add_plugins((

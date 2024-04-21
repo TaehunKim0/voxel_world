@@ -10,6 +10,7 @@ image = "0.25.1"
 rand = "0.8.5"
 lazy_static = "1.4.0"
 noise = "0.9.0"
+bevy-tnua = "0.16.0"
 
 [workspace]
 resolver = "2"

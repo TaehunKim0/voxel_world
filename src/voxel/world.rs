@@ -12,29 +12,31 @@ use std::f32::consts::PI;
 
 #[derive(Resource)]
 pub struct World {
-    world_size: i32,
-    chunks: Vec<Vec<Chunk>>,
+    chunks: [[Chunk; VoxelData::WORLD_SIZE]; VoxelData::WORLD_SIZE],
 }
 
 impl World {
-    pub fn new(world_size: i32) -> Self {
-        let mut chunks = Vec::with_capacity(world_size as usize);
-        for y in 0..world_size {
-            let mut row = Vec::with_capacity(world_size as usize);
-            for x in 0..world_size {
-                row.push(Chunk::new(ChunkCoord { x, y }));
-            }
-            chunks.push(row);
-        }
+    pub fn new() -> Self {
+        use core::array;
 
-        World { world_size, chunks }
+        World {
+            chunks: array::from_fn(|_y| array::from_fn(|_x| Chunk::default())),
+        }
+    }
+
+    pub fn generate_world(&mut self) {
+        for y in 0..VoxelData::WORLD_SIZE {
+            for x in 0..VoxelData::WORLD_SIZE {
+                self.chunks[y][x] = Chunk::new(ChunkCoord { x: x as i32, y: y as i32 });
+            }
+        }
     }
 
     pub fn is_chunk_in_world(&mut self, coord: ChunkCoord) -> bool {
         if coord.x > 0
-            && coord.x < self.world_size * VoxelData::CHUNK_WIDTH - 1
+            && coord.x < VoxelData::WORLD_SIZE as i32 * VoxelData::CHUNK_WIDTH - 1
             && coord.y > 0
-            && coord.y < self.world_size * VoxelData::CHUNK_WIDTH - 1
+            && coord.y < VoxelData::WORLD_SIZE as i32 * VoxelData::CHUNK_WIDTH - 1
         {
             return true;
         }
@@ -43,11 +45,11 @@ impl World {
 
     pub fn is_voxel_in_world(&mut self, pos: Vec3) -> bool {
         if pos.x > 0.0
-            && pos.x < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.x < (VoxelData::WORLD_SIZE as i32 * VoxelData::CHUNK_WIDTH - 1) as f32
             && pos.y > 0.0
-            && pos.y < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.y < (VoxelData::WORLD_SIZE as i32 * VoxelData::CHUNK_WIDTH - 1) as f32
             && pos.z > 0.0
-            && pos.z < (self.world_size * VoxelData::CHUNK_WIDTH - 1) as f32
+            && pos.z < (VoxelData::WORLD_SIZE as i32 * VoxelData::CHUNK_WIDTH - 1) as f32
         {
             return true;
         }
@@ -75,7 +77,7 @@ pub fn setup(
     _window_size: Res<WindowSize>,
 ) {
     let texture_handle: Handle<Image> = asset_server.load("Blocks.png");
-    let num_chunk = voxel_world.world_size;
+    let num_chunk = VoxelData::WORLD_SIZE;
 
     for y in 0..num_chunk {
         for x in 0..num_chunk {

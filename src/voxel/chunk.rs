@@ -1,3 +1,5 @@
+use std::default;
+
 use super::block::*;
 use super::mesh::*;
 use bevy::prelude::*;
@@ -7,6 +9,8 @@ use noise::Perlin;
 use crate::noise::basic_perlin;
 use crate::noise::basic_perlin::*;
 extern crate noise as other_noise;
+
+#[derive(Clone)]
 pub struct Chunk {
     pub vertices: Vec<Vec3>,
     pub triangles: Vec<u32>,
@@ -15,12 +19,25 @@ pub struct Chunk {
     pub chunk_coord: ChunkCoord,
 }
 
+#[derive(Clone)]
 pub struct ChunkCoord {
     pub x: i32,
     pub y: i32,
 }
 
 impl Chunk {
+    pub fn default() -> Self {
+        let chunk = Chunk {
+            vertices: Vec::new(),
+            triangles: Vec::new(),
+            uvs: Vec::new(),
+            voxel_map: Vec::new(),
+            chunk_coord: ChunkCoord { x: 0, y: 0 },
+        };
+
+        chunk
+    }
+
     pub fn new(chunk_coord: ChunkCoord) -> Self {
         let mut chunk = Chunk {
             vertices: Vec::new(),
@@ -98,9 +115,9 @@ impl Chunk {
                     self.voxel_map[pos.x as usize][pos.y as usize][pos.z as usize] as usize;
 
                 let offset = Vec3::new(
-                    self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32,
-                    0.0,
-                    self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32,
+                    (self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32) - VoxelData::CHUNK_WIDTH as f32,
+                    -10.0,
+                    (self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32) - VoxelData::CHUNK_WIDTH as f32,
                 );
 
                 self.vertices.push(
@@ -157,18 +174,15 @@ impl Chunk {
         for x in 0..VoxelData::CHUNK_HEIGHT {
             for y in 0..VoxelData::CHUNK_WIDTH {
                 for z in 0..VoxelData::CHUNK_WIDTH {
-                    //self.voxel_map[x as usize][y as usize][z as usize] = super::world::World::get_voxel(Vec3::new(x as f32, y as f32, z as f32));
-                    self.voxel_map[x as usize][y as usize][z as usize] = 0;
-
                     if y < 1 {
-                        self.voxel_map[x as usize][y as usize][z as usize] = 2;
+                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::BedRock as i32;
                     } else if y == VoxelData::CHUNK_HEIGHT - 1 {
                         //let w = perlin.get([x as f64 * 0.1, y as f64 * 0.1, z as f64 * 0.1]);
                         // /* let w = simplex_noise.get([x as f64 / zoom, y as f64 / zoom, z as f64 / zoom]); */
                         // let w = basic_perlin::perlin_noise2d(x as f32, y as f32, 4);
-                        self.voxel_map[x as usize][y as usize][z as usize] = 0;
+                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::Grass as i32;
                     } else {
-                        self.voxel_map[x as usize][y as usize][z as usize] = 1;
+                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::Stone as i32;
                     }
                 }
             }
