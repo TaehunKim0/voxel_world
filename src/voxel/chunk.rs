@@ -17,9 +17,11 @@ pub struct Chunk {
     pub uvs: Vec<Vec2>,
     pub voxel_map: Vec<Vec<Vec<i32>>>,
     pub chunk_coord: ChunkCoord,
+    pub is_updated: bool,
+    pub is_active: bool,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ChunkCoord {
     pub x: i32,
     pub y: i32,
@@ -33,6 +35,8 @@ impl Chunk {
             uvs: Vec::new(),
             voxel_map: Vec::new(),
             chunk_coord: ChunkCoord { x: 0, y: 0 },
+            is_updated: false,
+            is_active: false,
         };
 
         chunk
@@ -45,6 +49,8 @@ impl Chunk {
             uvs: Vec::new(),
             voxel_map: Vec::new(),
             chunk_coord,
+            is_updated: false,
+            is_active: false,
         };
 
         for _ in 0..VoxelData::CHUNK_WIDTH {
@@ -115,9 +121,9 @@ impl Chunk {
                     self.voxel_map[pos.x as usize][pos.y as usize][pos.z as usize] as usize;
 
                 let offset = Vec3::new(
-                    (self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32) - VoxelData::CHUNK_WIDTH as f32,
+                    (self.chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32),
                     -10.0,
-                    (self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32) - VoxelData::CHUNK_WIDTH as f32,
+                    (self.chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32),
                 );
 
                 self.vertices.push(

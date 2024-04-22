@@ -10,7 +10,7 @@ impl VoxelData {
     pub const NORMALIZE_BLOCK_TEXTURE_SIZE: f32 = 1.0 / 4 as f32;
 
     pub const WORLD_SIZE: usize = 20;
-    pub const VIEW_DISTANCE_IN_CHUNKS: i32 = 5;
+    pub const VIEW_DISTANCE_IN_CHUNKS: i32 = 6;
 
     // 큐브의 8개 버텍스의 상대 위치
     pub const VOXEL_VERTS: [Vec3; 8] = [
