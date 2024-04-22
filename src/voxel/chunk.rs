@@ -5,6 +5,7 @@ use super::mesh::*;
 use bevy::prelude::*;
 use noise::NoiseFn;
 use noise::Perlin;
+use std::hash::{Hash, Hasher};
 
 use crate::noise::basic_perlin;
 use crate::noise::basic_perlin::*;
@@ -21,7 +22,13 @@ pub struct Chunk {
     pub is_active: bool,
 }
 
-#[derive(Clone, Debug)]
+impl Hash for Chunk {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.chunk_coord.hash(state);
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub struct ChunkCoord {
     pub x: i32,
     pub y: i32,

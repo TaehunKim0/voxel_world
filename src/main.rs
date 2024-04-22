@@ -12,6 +12,7 @@ use bevy::{
 use bevy_flycam::prelude::*;
 use image::{flat::View, Rgb, Rgba};
 use voxel::world;
+use bevy_atmosphere::prelude::*;
 
 #[derive(Resource)]
 struct WindowSize {
@@ -21,7 +22,7 @@ struct WindowSize {
 
 impl Default for WindowSize {
     fn default() -> WindowSize {
-        WindowSize { x: 800, y: 600 }
+        WindowSize { x: 1280, y: 720 }
     }
 }
 
@@ -54,6 +55,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "I am a boy".into(),
                 name: Some("bevy.app".into()),
+                position: WindowPosition::At(IVec2 { x: 0, y: 0 }),
                 resolution: (window_size.x as f32, window_size.y as f32).into(),
                 present_mode: PresentMode::AutoNoVsync,
                 prevent_default_event_handling: false,
@@ -68,7 +70,7 @@ fn main() {
             }),
             ..default()
         }))
-        .add_plugins(PlayerPlugin)
+        .add_plugins((PlayerPlugin,AtmospherePlugin))
         .add_plugins(LogDiagnosticsPlugin::default())
         // .add_plugins(FrameTimeDiagnosticsPlugin::default())
         .insert_resource(window_size)
