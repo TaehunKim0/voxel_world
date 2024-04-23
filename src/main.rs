@@ -22,7 +22,7 @@ struct WindowSize {
 
 impl Default for WindowSize {
     fn default() -> WindowSize {
-        WindowSize { x: 1280, y: 720 }
+        WindowSize { x: 800, y: 600 }
     }
 }
 
@@ -77,5 +77,6 @@ fn main() {
         .insert_resource(voxel_world)
         .add_systems(Startup, world::setup)
         .add_systems(Update, world::update)
+        .add_systems(PostUpdate, world::update_chunk_in_view_range)
         .run();
 }

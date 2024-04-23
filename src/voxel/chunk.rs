@@ -28,10 +28,18 @@ impl Hash for Chunk {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Component)]
 pub struct ChunkCoord {
     pub x: i32,
     pub y: i32,
+}
+
+impl ChunkCoord {
+    fn new () -> Self {
+        ChunkCoord {
+            x : 0, y:0
+        }
+    }
 }
 
 impl Chunk {
