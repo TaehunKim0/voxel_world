@@ -11,7 +11,6 @@ use bevy::render::{
 use bevy::utils::uuid::generate_composite_uuid;
 extern crate noise as other_noise;
 use super::chunk::*;
-use super::mesh::Voxel;
 use rand::Rng;
 use std::collections::HashMap;
 use std::f32::consts::PI;
