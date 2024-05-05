@@ -176,7 +176,7 @@ fn noise3d(x: f32, y: f32, z: f32) -> f32 {
 pub fn perlin_noise2d(x: f32, y: f32, num_octaves: i32) -> f32 {
     let mut result = 0.0;
     let mut amplitude = 1.0;
-    let mut frequency = 0.005;
+    let mut frequency = 0.01;
     let persistence = 0.5;
 
     for _ in 0..num_octaves {

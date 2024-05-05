@@ -115,7 +115,6 @@ impl World {
         } else if pos.y as i32 == VoxelData::CHUNK_HEIGHT - 1 {
             let perlin = other_noise::Perlin::new(1);
             let result = perlin.get([pos.x as f64, pos.y as f64]);
-            println!("perlin : {}", result);
             if result < 0.5 {
                 EBlockType::Grass as i32
             } else {

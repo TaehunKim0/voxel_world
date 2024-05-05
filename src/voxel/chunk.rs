@@ -2,15 +2,18 @@ use std::default;
 
 use super::block::*;
 use super::mesh::*;
+use bevy::ecs::world;
 use bevy::prelude::*;
 use bevy::utils::warn;
 use noise::NoiseFn;
 use noise::Perlin;
+use other_noise::core::simplex;
 use std::hash::{Hash, Hasher};
 
 use crate::noise::basic_perlin;
 use crate::noise::basic_perlin::*;
 use crate::noise::random_perlin;
+use crate::noise::random_perlin::perlin_noise2d;
 extern crate noise as other_noise;
 
 #[derive(Clone)]
@@ -198,8 +201,8 @@ impl Chunk {
     }
 
     fn populate_voxel_map(&mut self, chunk_coord: ChunkCoord) {
-        for x in 0..VoxelData::CHUNK_HEIGHT {
-            for y in 0..VoxelData::CHUNK_WIDTH {
+        for y in 0..VoxelData::CHUNK_HEIGHT {
+            for x in 0..VoxelData::CHUNK_WIDTH {
                 for z in 0..VoxelData::CHUNK_WIDTH {
                     self.voxel_map[x as usize][y as usize][z as usize] = self.get_block_type(
                         Vec3::new(x as f32, y as f32, z as f32),
@@ -218,19 +221,39 @@ impl Chunk {
         let world_pos =
             self.voxel_to_world_pos(Vec2::new(pos.x as f32, pos.z as f32), chunk_coord.clone());
         let perlin = other_noise::Perlin::new(132);
-        let result = perlin.get([(world_pos.x * 0.1) as f64, (world_pos.y * 0.1) as f64]);
+        let simplex = noise::Simplex::new(132);
 
-        // 9 * (0~1) + 7
-        // terrain_height = (7 ~ 16)
-        let terrain_height = ((VoxelData::CHUNK_HEIGHT - 1) as f64 * result) as f32
-            + (VoxelData::CHUNK_HEIGHT - 2) as f32;
+        let mut perlin_result = 0.0;
+        let octave : i32 = 6;
+        let mut frequency = 0.001;
+        for _ in 0..octave {
+            perlin_result += perlin.get([(world_pos.x * frequency) as f64, (world_pos.y * frequency) as f64]);
+            frequency *= 2.0;
+        }
 
-        let terrain_height = terrain_height.clamp(0.0, (VoxelData::CHUNK_HEIGHT - 1) as f32);
+        //let result = crate::noise::basic_perlin::perlin_noise2d(world_pos.x, world_pos.y, 4) as f64;
+
+        let simplex_result = simplex.get([
+            world_pos.x as f64 * 0.1,
+            pos.y as f64 * 0.1,
+            world_pos.y as f64 * 0.1,
+        ]);
+
+        let min_ground = VoxelData::CHUNK_HEIGHT as f32 * 0.5;
+
+        let terrain_height = ((VoxelData::CHUNK_HEIGHT - 1) as f64 * perlin_result) as f32;
+        let terrain_height = terrain_height.clamp(min_ground, (VoxelData::CHUNK_HEIGHT - 1) as f32);
 
         if pos.y == terrain_height.floor() {
             EBlockType::Grass as i32
         } else if pos.y < terrain_height.floor() {
-            EBlockType::Stone as i32
+            if pos.y > min_ground {
+                EBlockType::Dirt as i32
+            } else if simplex_result < 0.0 {
+                EBlockType::Air as i32
+            } else {
+                EBlockType::Stone as i32
+            }
         } else {
             EBlockType::Air as i32
         }
