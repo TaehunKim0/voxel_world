@@ -3,12 +3,14 @@ use std::default;
 use super::block::*;
 use super::mesh::*;
 use bevy::prelude::*;
+use bevy::utils::warn;
 use noise::NoiseFn;
 use noise::Perlin;
 use std::hash::{Hash, Hasher};
 
 use crate::noise::basic_perlin;
 use crate::noise::basic_perlin::*;
+use crate::noise::random_perlin;
 extern crate noise as other_noise;
 
 #[derive(Clone)]
@@ -35,10 +37,8 @@ pub struct ChunkCoord {
 }
 
 impl ChunkCoord {
-    fn new () -> Self {
-        ChunkCoord {
-            x : 0, y:0
-        }
+    fn new() -> Self {
+        ChunkCoord { x: 0, y: 0 }
     }
 }
 
@@ -63,7 +63,7 @@ impl Chunk {
             triangles: Vec::new(),
             uvs: Vec::new(),
             voxel_map: Vec::new(),
-            chunk_coord,
+            chunk_coord: chunk_coord.clone(),
             is_updated: false,
             is_active: false,
         };
@@ -80,7 +80,7 @@ impl Chunk {
             chunk.voxel_map.push(row);
         }
 
-        chunk.populate_voxel_map();
+        chunk.populate_voxel_map(chunk_coord.clone());
         chunk.create_mesh_data();
 
         chunk
@@ -188,25 +188,51 @@ impl Chunk {
             .is_solid;
     }
 
-    fn populate_voxel_map(&mut self) {
-        let perlin = Perlin::new(1932);
-        let simplex_noise = other_noise::Simplex::new(other_noise::Simplex::DEFAULT_SEED);
-        let zoom = 10.0;
+    fn voxel_to_world_pos(&mut self, pos: Vec2, chunk_coord: ChunkCoord) -> Vec2 {
+        let offset = Vec2::new(
+            (chunk_coord.x as f32 * VoxelData::CHUNK_WIDTH as f32),
+            (chunk_coord.y as f32 * VoxelData::CHUNK_WIDTH as f32),
+        );
+
+        Vec2::new(pos.x + offset.x, pos.y + offset.y)
+    }
+
+    fn populate_voxel_map(&mut self, chunk_coord: ChunkCoord) {
         for x in 0..VoxelData::CHUNK_HEIGHT {
             for y in 0..VoxelData::CHUNK_WIDTH {
                 for z in 0..VoxelData::CHUNK_WIDTH {
-                    if y < 1 {
-                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::BedRock as i32;
-                    } else if y == VoxelData::CHUNK_HEIGHT - 1 {
-                        //let w = perlin.get([x as f64 * 0.1, y as f64 * 0.1, z as f64 * 0.1]);
-                        // /* let w = simplex_noise.get([x as f64 / zoom, y as f64 / zoom, z as f64 / zoom]); */
-                        // let w = basic_perlin::perlin_noise2d(x as f32, y as f32, 4);
-                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::Grass as i32;
-                    } else {
-                        self.voxel_map[x as usize][y as usize][z as usize] = EBlockType::Stone as i32;
-                    }
+                    self.voxel_map[x as usize][y as usize][z as usize] = self.get_block_type(
+                        Vec3::new(x as f32, y as f32, z as f32),
+                        chunk_coord.clone(),
+                    );
                 }
             }
+        }
+    }
+
+    fn get_block_type(&mut self, pos: Vec3, chunk_coord: ChunkCoord) -> i32 {
+        if pos.y < 1.0 {
+            return EBlockType::BedRock as i32;
+        }
+
+        let world_pos =
+            self.voxel_to_world_pos(Vec2::new(pos.x as f32, pos.z as f32), chunk_coord.clone());
+        let perlin = other_noise::Perlin::new(132);
+        let result = perlin.get([(world_pos.x * 0.1) as f64, (world_pos.y * 0.1) as f64]);
+
+        // 9 * (0~1) + 7
+        // terrain_height = (7 ~ 16)
+        let terrain_height = ((VoxelData::CHUNK_HEIGHT - 1) as f64 * result) as f32
+            + (VoxelData::CHUNK_HEIGHT - 2) as f32;
+
+        let terrain_height = terrain_height.clamp(0.0, (VoxelData::CHUNK_HEIGHT - 1) as f32);
+
+        if pos.y == terrain_height.floor() {
+            EBlockType::Grass as i32
+        } else if pos.y < terrain_height.floor() {
+            EBlockType::Stone as i32
+        } else {
+            EBlockType::Air as i32
         }
     }
 

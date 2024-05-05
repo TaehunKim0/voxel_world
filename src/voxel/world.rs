@@ -1,6 +1,6 @@
 use super::block::EBlockType;
 use super::mesh::*;
-use crate::WindowSize;
+use crate::{noise, WindowSize};
 use bevy::math::vec3;
 use bevy::pbr::CascadeShadowConfigBuilder;
 use bevy::prelude::*;
@@ -9,6 +9,7 @@ use bevy::render::{
     mesh::Indices, render_asset::RenderAssetUsages, render_resource::PrimitiveTopology,
 };
 use bevy::utils::uuid::generate_composite_uuid;
+use other_noise::NoiseFn;
 extern crate noise as other_noise;
 use super::chunk::*;
 use rand::Rng;
@@ -112,7 +113,14 @@ impl World {
         if pos.y < 1.0 {
             EBlockType::Stone as i32
         } else if pos.y as i32 == VoxelData::CHUNK_HEIGHT - 1 {
-            EBlockType::Sand as i32
+            let perlin = other_noise::Perlin::new(1);
+            let result = perlin.get([pos.x as f64, pos.y as f64]);
+            println!("perlin : {}", result);
+            if result < 0.5 {
+                EBlockType::Grass as i32
+            } else {
+                EBlockType::Sand as i32
+            }
         } else {
             EBlockType::BedRock as i32
         }
@@ -179,7 +187,10 @@ pub fn setup(
                         }),
                         ..default()
                     },
-                    ChunkCoord {x:coord.x, y: coord.y },
+                    ChunkCoord {
+                        x: coord.x,
+                        y: coord.y,
+                    },
                 ))
                 .insert(VisibilityBundle {
                     ..Default::default()
@@ -256,7 +267,10 @@ pub fn update(
                         }),
                         ..default()
                     },
-                    ChunkCoord {x:coord.x, y: coord.y },
+                    ChunkCoord {
+                        x: coord.x,
+                        y: coord.y,
+                    },
                 ))
                 .insert(VisibilityBundle {
                     ..Default::default()

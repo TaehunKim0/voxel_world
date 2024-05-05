@@ -74,13 +74,27 @@ impl BlockType {
             left_face_texture: 6,
         }
     }
+
+    pub fn new_air() -> BlockType {
+        BlockType {
+            block_name: "Air".to_string(),
+            is_solid: false,
+            back_face_texture: 6,
+            front_face_texture: 6,
+            top_face_texture: 6,
+            bottom_face_texture: 6,
+            right_face_texture: 6,
+            left_face_texture: 6,
+        }
+    }
 }
 
 pub enum EBlockType {
     Grass = 0,
     Stone,
     BedRock,
-    Sand
+    Sand,
+    Air,
 }
 
 pub struct Block {
@@ -94,6 +108,7 @@ impl Block {
             BlockType::new_stone(),
             BlockType::new_bed_rock(),
             BlockType::new_sand(),
+            BlockType::new_air(),
         ];
 
         Block { block_types }
